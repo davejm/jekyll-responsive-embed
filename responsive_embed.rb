@@ -27,11 +27,10 @@ module Jekyll
     end
 
     def interesting_url(href)
-      interesting_domain(href) && href.include?('jekyll_embed')
+      interesting_domain(href)
     end
 
     def get_embed_markup(url, params)
-      # the URL has a jekyll_embed GET paramter
       context = {
         scheme: url.scheme
       }
@@ -54,20 +53,17 @@ module Jekyll
     end
 
     def convert(content)
-      re = %r{(\n    )?(\[.*\])\((http.*)\)}
+      re = %r{^(http.*)$}
       m = content.scan re
       m.each do |match|
-        next unless match[0].nil?
-        href = match[2]
+        href = match[0]
         if href and interesting_url(href)
           url = URI(href)
           params = CGI.parse(url.query)
-          if params.key?('jekyll_embed')
-            embed = get_embed_markup(url, params)
-            # if we have some embed markup replace the Markdown link with it
-            if embed
-              content = content.gsub("#{match[1]}(#{match[2]})", embed)
-            end
+          embed = get_embed_markup(url, params)
+          # if we have some embed markup replace the Markdown link with it
+          if embed
+            content = content.gsub("#{match[0]}", embed)
           end
         end
       end
